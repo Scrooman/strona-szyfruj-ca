@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Odszyfrowywanie Wiadomości</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background-color: #ffffff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h2, h3 {
+            margin-bottom: 10px;
+        }
+        .section {
+            margin-bottom: 20px;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+        .hidden { display: none; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="section">
+            <h2>Zaszyfrowana wiadomość</h2>
+            <p id="encryptedMessage"></p> <!-- Zostanie zaktualizowane dynamicznie -->
+        </div>
+
+        <div class="section">
+            <h3>Wskazówka dla klucza:</h3>
+            <p id="hintText"></p>
+            <h3>Instrukcja:</h3>
+            <p>Podaj KLUCZ w formie jednego słowa, aby odszyfrować wiadomość</p>
+        </div>
+
+        <div class="section">
+            <label for="keyInput">Wprowadź klucz:</label>
+            <input type="text" id="keyInput" placeholder="Wprowadź klucz">
+            <button onclick="decryptMessage()">Odszyfruj wiadomość</button>
+        </div>
+
+        <div id="progressContainer" class="hidden section">
+            <h3>Postęp odszyfrowania:</h3>
+            <progress id="progressBar" value="0" max="100"></progress>
+        </div>
+
+        <div class="section">
+            <h3>Odszyfrowana wiadomość:</h3>
+            <div id="outputMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        const correctKey = "łodzi".toLowerCase();
+        let decryptedMessage = "Fajnie będzie razem pojechać na wycieczkę! PS: zamiast pracować zajmuje się innymi rzeczami...";
+        let hint = "Jedziemy tam w sobotę"; // Przechowywanie wskazówki
+
+        function vigenereEncrypt(text, key) {
+            const alphabet = "abcdefghijklmnopqrstuvwxyz";
+            let result = "";
+            let keyIndex = 0;
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i].toLowerCase();
+                const keyChar = key[keyIndex % key.length].toLowerCase();
+
+                if (alphabet.includes(char)) {
+                    const shift = alphabet.indexOf(keyChar);
+                    const newIndex = (alphabet.indexOf(char) + shift) % 26;
+                    result += alphabet[newIndex];
+                    keyIndex++;
+                } else {
+                    result += char;
+                }
+            }
+            return result;
+        }
+
+        const encryptedMessage = vigenereEncrypt(decryptedMessage, correctKey);
+        document.getElementById("encryptedMessage").innerText = encryptedMessage;
+        document.getElementById("hintText").innerText = hint;
+
+        function vigenereDecrypt(text, key) {
+            const alphabet = "abcdefghijklmnopqrstuvwxyz";
+            let result = "";
+            let keyIndex = 0;
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i].toLowerCase();
+                const keyChar = key[keyIndex % key.length].toLowerCase();
+
+                if (alphabet.includes(char)) {
+                    const shift = alphabet.indexOf(keyChar);
+                    const newIndex = (alphabet.indexOf(char) - shift + 26) % 26;
+                    result += alphabet[newIndex];
+                    keyIndex++;
+                } else {
+                    result += char;
+                }
+            }
+            return result;
+        }
+
+        function decryptMessage() {
+            const userKey = document.getElementById("keyInput").value.trim().toLowerCase();
+            const outputMessage = document.getElementById("outputMessage");
+            const progressContainer = document.getElementById("progressContainer");
+            const progressBar = document.getElementById("progressBar");
+
+            outputMessage.innerHTML = "";
+            progressContainer.classList.remove("hidden");
+            progressBar.value = 0;
+
+            let decryptedOutput = vigenereDecrypt(encryptedMessage, userKey);
+            let index = 0;
+            let displayedMessage = "";
+
+            const interval = setInterval(() => {
+                if (index < decryptedOutput.length) {
+                    displayedMessage += decryptedOutput[index]; // Zamiast losowych znaków, wyświetl prawdziwą literę
+                    outputMessage.innerHTML = displayedMessage;
+                    index++;
+                    progressBar.value = (index / decryptedOutput.length) * 100;
+                }
+
+                if (index >= decryptedOutput.length) {
+                    clearInterval(interval);
+
+                    if (userKey === correctKey) {
+                        outputMessage.innerHTML += `<p class="success">Klucz jest prawidłowy</p>`;
+                    } else {
+                        outputMessage.innerHTML += `<p class="error">Klucz jest nieprawidłowy</p>`;
+                    }
+
+                    progressContainer.classList.add("hidden");
+                }
+            }, 333); // 1/3 sekundy
+        }
+    </script>
+</body>
+</html>
