@@ -71,8 +71,10 @@
         let decryptedMessage = "Fajnie będzie razem pojechać na wycieczkę! PS: zamiast pracować zajmuje się innymi rzeczami...";
         let hint = "Jedziemy tam w sobotę"; // Przechowywanie wskazówki
 
+        const alphabet = "aąbcćdeęfghijklłmnńoóprsśtuwyzźż".toLowerCase();
+
+        // Funkcja szyfrowania Vigenère'a z uwzględnieniem polskich znaków
         function vigenereEncrypt(text, key) {
-            const alphabet = "abcdefghijklmnopqrstuvwxyz";
             let result = "";
             let keyIndex = 0;
 
@@ -80,43 +82,49 @@
                 const char = text[i].toLowerCase();
                 const keyChar = key[keyIndex % key.length].toLowerCase();
 
-                if (alphabet.includes(char)) {
-                    const shift = alphabet.indexOf(keyChar);
-                    const newIndex = (alphabet.indexOf(char) + shift) % 26;
+                const charIndex = alphabet.indexOf(char);
+                const keyCharIndex = alphabet.indexOf(keyChar);
+
+                if (charIndex !== -1) { // Jeżeli znak jest w alfabecie
+                    const newIndex = (charIndex + keyCharIndex) % alphabet.length;
                     result += alphabet[newIndex];
                     keyIndex++;
                 } else {
-                    result += char;
+                    result += char; // Znak, którego nie ma w alfabecie, nie jest zmieniany
                 }
             }
             return result;
         }
 
+        // Funkcja odszyfrowywania Vigenère'a z uwzględnieniem polskich znaków
+        function vigenereDecrypt(text, key) {
+            let result = "";
+            let keyIndex = 0;
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i].toLowerCase();
+                const keyChar = key[keyIndex % key.length].toLowerCase();
+
+                const charIndex = alphabet.indexOf(char);
+                const keyCharIndex = alphabet.indexOf(keyChar);
+
+                if (charIndex !== -1) { // Jeżeli znak jest w alfabecie
+                    const newIndex = (charIndex - keyCharIndex + alphabet.length) % alphabet.length;
+                    result += alphabet[newIndex];
+                    keyIndex++;
+                } else {
+                    result += char; // Znak, którego nie ma w alfabecie, nie jest zmieniany
+                }
+            }
+            return result;
+        }
+
+        // Szyfrujemy wiadomość
         const encryptedMessage = vigenereEncrypt(decryptedMessage, correctKey);
         document.getElementById("encryptedMessage").innerText = encryptedMessage;
         document.getElementById("hintText").innerText = hint;
 
-        function vigenereDecrypt(text, key) {
-            const alphabet = "abcdefghijklmnopqrstuvwxyz";
-            let result = "";
-            let keyIndex = 0;
-
-            for (let i = 0; i < text.length; i++) {
-                const char = text[i].toLowerCase();
-                const keyChar = key[keyIndex % key.length].toLowerCase();
-
-                if (alphabet.includes(char)) {
-                    const shift = alphabet.indexOf(keyChar);
-                    const newIndex = (alphabet.indexOf(char) - shift + 26) % 26;
-                    result += alphabet[newIndex];
-                    keyIndex++;
-                } else {
-                    result += char;
-                }
-            }
-            return result;
-        }
-
+        // Funkcja obsługująca odszyfrowanie wiadomości po wpisaniu klucza
         function decryptMessage() {
             const userKey = document.getElementById("keyInput").value.trim().toLowerCase();
             const outputMessage = document.getElementById("outputMessage");
@@ -150,7 +158,7 @@
 
                     progressContainer.classList.add("hidden");
                 }
-            }, 333); // 1/3 sekundy
+            }, 22); // 2/10 sekundy
         }
     </script>
 </body>
